@@ -5,27 +5,6 @@ use crossterm::{
     terminal::{self, ClearType},
 };
 use std::io;
-fn limit_line_length<'a, I>(lines: I, max_chars: usize) -> impl Iterator<Item = String> + 'a
-where
-    I: Iterator<Item = &'a str> + 'a,
-{
-    lines.flat_map(move |line| {
-        let mut remaining = line;
-
-        let mut result = vec![];
-        if line.is_empty() {
-            result.push("\n".to_string());
-        }
-
-        while !remaining.is_empty() {
-            let (limited, rest) = remaining.split_at(std::cmp::min(remaining.len(), max_chars));
-            result.push(limited.to_string());
-            remaining = rest.trim_start();
-        }
-
-        result
-    })
-}
 
 pub fn render_cmdline<W>(w: &mut W, app: &mut App) -> io::Result<()>
 where

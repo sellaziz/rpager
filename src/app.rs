@@ -20,10 +20,12 @@ pub struct App<'a> {
     pub query: String,
     pub file: String,
     pub file_contents: String,
+    pub adjusted_file_contents: Vec<String>,
     pub line_count: usize,
     pub state: AppStates,
     pub cmd_str: String,
     pub finder: Finder,
+    pub term_size: (u16, u16),
 }
 
 impl Finder {
@@ -53,13 +55,33 @@ impl Finder {
     }
 }
 
+pub fn limit_line_length<'a, I>(lines: I, max_chars: usize) -> impl Iterator<Item = String> + 'a
+where
+    I: Iterator<Item = &'a str> + 'a,
+{
+    lines.flat_map(move |line| {
+        let mut remaining = line;
+
+        let mut result = vec![];
+        if line.is_empty() {
+            result.push("\n".to_string());
+        }
+
+        while !remaining.is_empty() {
+            let (limited, rest) = remaining.split_at(std::cmp::min(remaining.len(), max_chars));
+            result.push(limited.to_string());
+            remaining = rest.trim_start();
+        }
+
+        result
+    })
+}
+
 impl<'a> App<'a> {
     pub fn new(title: &'a str, query: String, filename: String) -> Result<App<'a>, io::Error> {
         let file_contents = fs::read_to_string(filename.clone())?;
-        let mut line_count = 0;
-        for _ in file_contents.lines() {
-            line_count += 1;
-        }
+        let adjusted_file_contents:Vec<String> = limit_line_length(file_contents.lines(), 100).collect();
+        let line_count = adjusted_file_contents.len();
         Ok(App {
             title,
             should_quit: false,
@@ -67,10 +89,12 @@ impl<'a> App<'a> {
             query: query.clone(),
             file: filename.clone(),
             file_contents: file_contents,
+            adjusted_file_contents: adjusted_file_contents,
             line_count: line_count,
             state: AppStates::Running,
             cmd_str: "".to_string(),
             finder: Finder::new().unwrap(),
+            term_size: (100,100),
         })
     }
 
@@ -151,6 +175,11 @@ impl<'a> App<'a> {
                 self.state = AppStates::Running;
             }
         }
+    }
+
+    pub fn on_resize(&mut self) {
+        self.adjusted_file_contents = limit_line_length(self.file_contents.lines(), self.term_size.0 as usize).collect();
+        self.line_count = self.adjusted_file_contents.len();
     }
 
     pub fn on_tick(&mut self) {}
