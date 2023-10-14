@@ -53,17 +53,16 @@ where
         if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
-                    KeyCode::Up | KeyCode::Char('k') => {
+                    KeyCode::Up => {
                         app.on_up();
                         ui::draw(w, &mut app)?;
                     },
-                    KeyCode::Down | KeyCode::Char('j') => {
+                    KeyCode::Down => {
                         app.on_down();
                         ui::draw(w, &mut app)?;
                     },
                     KeyCode::Char(c) => app.on_key(c),
-                    // KeyCode::Left => app.on_left(),
-                    // KeyCode::Right => app.on_right(),
+                    KeyCode::Enter => app.on_enter(),
                     _ => {}
                 }
             }

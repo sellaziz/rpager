@@ -1,5 +1,11 @@
 use std::{fs, io};
 
+#[derive(Debug)]
+pub enum AppStates {
+    Running,
+    TypeCmd,
+}
+
 pub struct App<'a> {
     pub title: &'a str,
     pub should_quit: bool,
@@ -8,6 +14,8 @@ pub struct App<'a> {
     pub file: String,
     pub file_contents: String,
     pub line_count: usize,
+    pub state: AppStates,
+    pub cmd_str: String,
 }
 
 impl<'a> App<'a> {
@@ -23,8 +31,10 @@ impl<'a> App<'a> {
             current_id: 0,
             query: query.clone(),
             file: filename.clone(),
-            file_contents,
-            line_count,
+            file_contents: file_contents,
+            line_count: line_count,
+            state: AppStates::Running,
+            cmd_str: "".to_string(),
         })
     }
 
@@ -41,13 +51,37 @@ impl<'a> App<'a> {
     }
 
     pub fn on_key(&mut self, c: char) {
-        match c {
-            'q' => {
-                self.should_quit = true;
+        match self.state {
+            AppStates::Running => {
+                match c {
+                    'q' => {
+                        self.should_quit = true;
+                    }
+                    'j' => {
+                        self.on_down();
+                    }
+                    'k' => {
+                        self.on_up();
+                    }
+                    '/' => {
+                        self.state = AppStates::TypeCmd;
+                    }
+                    _ => {}
+                }
             }
-            _ => {}
+            AppStates::TypeCmd => {
+                self.cmd_str.push(c);
+            }
         }
     }
 
+    pub fn on_enter(&mut self) {
+        match self.state {
+            AppStates::Running => {}
+            AppStates::TypeCmd => {
+                self.state = AppStates::Running;
+            }
+        }
+    }
     pub fn on_tick(&mut self) {}
 }

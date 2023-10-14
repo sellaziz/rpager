@@ -31,11 +31,13 @@ pub fn render_cmdline<W>(w: &mut W, app: &mut App) -> io::Result<()>
 where
     W: io::Write,
 {
-    let (column_size, line_size) = terminal::size().unwrap();
+    let (_column_size, line_size) = terminal::size().unwrap();
+    let cmd_str = app.cmd_str.clone();
+
     execute!(
         w,
         cursor::MoveTo(0, line_size),
-        style::Print(":Command "),
+        style::Print(cmd_str),
     )?;
 
     Ok(())
