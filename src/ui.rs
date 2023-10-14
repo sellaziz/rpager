@@ -27,12 +27,26 @@ where
     })
 }
 
+pub fn render_cmdline<W>(w: &mut W, app: &mut App) -> io::Result<()>
+where
+    W: io::Write,
+{
+    let (column_size, line_size) = terminal::size().unwrap();
+    execute!(
+        w,
+        cursor::MoveTo(0, line_size),
+        style::Print(":Command "),
+    )?;
+
+    Ok(())
+}
+
 pub fn draw<W>(w: &mut W, app: &mut App) -> io::Result<()>
 where
     W: io::Write,
 {
     let (column_size, line_size) = terminal::size().unwrap();
-    queue!(
+    execute!(
         w,
         style::ResetColor,
         terminal::Clear(ClearType::All),
@@ -55,8 +69,8 @@ where
         w,
         style::SetForegroundColor(Color::Black),
         style::SetBackgroundColor(Color::White),
-        style::Print(":Command "),
     )?;
+    render_cmdline(w, app);
     Ok(())
 }
 
