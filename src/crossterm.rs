@@ -44,13 +44,13 @@ fn run_app<W>(w: &mut W, mut app: App, tick_rate: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
-    // let mut last_tick = Instant::now();
+    let mut last_tick = Instant::now();
     loop {
-        // ui::draw(w, &mut app)?;
-        // let timeout = tick_rate
-        //     .checked_sub(last_tick.elapsed())
-        //     .unwrap_or_else(|| Duration::from_secs(0));
-        // if crossterm::event::poll(timeout)? {
+        ui::draw(w, &mut app)?;
+        let timeout = tick_rate
+            .checked_sub(last_tick.elapsed())
+            .unwrap_or_else(|| Duration::from_secs(0));
+        if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
@@ -67,11 +67,11 @@ where
                     _ => {}
                 }
             }
-        // }
-        // if last_tick.elapsed() >= tick_rate {
-        //     app.on_tick();
-        //     last_tick = Instant::now();
-        // }
+        }
+        if last_tick.elapsed() >= tick_rate {
+            app.on_tick();
+            last_tick = Instant::now();
+        }
         if app.should_quit {
             return Ok(());
         }
